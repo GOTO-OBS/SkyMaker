@@ -109,5 +109,23 @@ def makelist(ra, dec, fname):
             myfile.write((str(100)+' '+str(xs[i])+' '+str(ys[i])+' '+str(ms[i])+'\n'))
     myfile.close()
 
-fname="GOTO1_20170323_00001"
+#What needs to be done now is:
+# - Generate a list of pointings for the mount, covering ~100sq deg.
+#   Note that SDSS only covers certain parts of the sky, so you need
+#   to point only in these regions.
+# - For each pointing, calculate the pointing for each telescope.
+#   There will need to be some overlap between pointings.
+# - Generate a filename `fname` for each telescope; see below for example.
+#   The source list will have name `fname`.list.
+# - Automatically edit the .conf file to include the correct output
+#   filename `fname`.fits and its own PSF. Each simulation should
+#   have its own .conf file called `fname`.conf
+# - We also need to include telescope jitter.
+# - Edit the header information to reflect the settings for each pointing.
+# - Loop over the mount pointings, generating twelve 2-minute sim images
+#   (three for each telescope) per mount pointing. We can
+#   use the same PSF for each set of twelve. In fact, we can probably assume
+#   the PSf remains stable for about 30 minutes (so 5 mount pointings).  
+
+fname="GOTO_01_20170323_00001"
 makelist(180.,30.,fname)
