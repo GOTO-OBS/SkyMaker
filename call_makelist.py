@@ -1,22 +1,47 @@
-from numpy import *
 import numpy as np
-import os
-import csv
-
 from astropy import wcs
-import astropy.units as u
-from astropy import coordinates as coord
 
-from astroquery.sdss import SDSS
-from astroquery.vizier import Vizier
+#from input_skymaker import makelist
 
-import matplotlib.pyplot as plt
+def mount_pointing(x, y, \
+                   width=4., height=4., \
+                   w_olap=0.1, h_olap=0.1):
 
-from input_skymaker import makelist
+    #Calculate declination of the pointing:
+    d_dec = y*(height-h_olap)
+    dec = d_dec
 
-dec_list = np.linspace(0,65,25)
-ra_list = np.linspace (160,200,25)
+    #Use the Haversine formula to calculate
+    #where the RA pointing is.
+    d_ra = x*(width - w_olap)
+    theta = np.pi*d_ra/180.
+    ra = 2.*np.arcsin(np.sin(theta/2.)/\
+                      np.cos(np.pi*dec/180.))
+    ra = 180.*ra/np.pi
+    
+    return ra, dec
 
-for i in range(1,26):
-    fname="GOTO_01_20170323_{0:05}".format(i)
-    makelist(ra_list[i-1],dec_list[i-1],fname)
+def ccd_pointing(ra, dec, \
+                 width=2, height=2,
+                 w_olap=0.1, h_olap=0.1):
+
+    #Calculate the declination of the ccd pointing:
+    ccd_dec = dec + np.array([-1,-1,1,1])*(height-h_olap)/2.
+    
+    #Use the Haversine formula to calculate
+    #the RA of the centre of each ccd.
+    d_ra = np.array([-1,1,-1,1])*(width-w_olap)/2.
+    theta = np.pi*d_ra/180.
+    ccd_ra = 2.*np.arcsin(np.sin(theta/2.)/\
+                          np.cos(np.pi*ccd_dec/180.))  
+    ccd_ra = 180.*ccd_ra/np.pi + ra
+    
+    return ccd_ra, ccd_dec
+    
+ra, dec = mount_pointing(5,10)
+ccd_ra, ccd_dec = ccd_pointing(ra, dec)
+for ra in np.ndenumerate(ccd_ra):
+    print ra[1], ccd_dec[ra[0]]
+
+#    fname="GOTO_01_20170323_{0:05}".format(i)
+#    makelist(ra_list[i-1],dec_list[i-1],fname)
