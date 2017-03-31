@@ -37,11 +37,19 @@ def ccd_pointing(ra, dec, \
     ccd_ra = 180.*ccd_ra/np.pi + ra
     
     return ccd_ra, ccd_dec
-    
-ra, dec = mount_pointing(5,10)
-ccd_ra, ccd_dec = ccd_pointing(ra, dec)
-for ra in np.ndenumerate(ccd_ra):
-    print ra[1], ccd_dec[ra[0]]
 
-#    fname="GOTO_01_20170323_{0:05}".format(i)
-#    makelist(ra_list[i-1],dec_list[i-1],fname)
+xs = np.array([2,3,4])
+ys = np.array([15, 16, 17])
+i = 0
+for y in ys:
+    for x in xs:
+        i = i+1
+        visit = "{0:04}".format(i)
+        
+        mount_ra, mount_dec = mount_pointing(x, y)
+        ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec)
+        
+        for j in np.arange(ccd_ras.size):
+            ccd = "{0:02}".format(j+1)
+            fname="GOTO_"+ccd+"_20170331_"+visit+".list"
+            #makelist(ccd_ras[j],ccd_decs[j],fname)
