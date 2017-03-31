@@ -48,8 +48,6 @@ for y in ys:
         
         mount_ra, mount_dec = mount_pointing(x, y)
         ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec)
-        print ccd_ras
-        print mount_ra
         for j in np.arange(ccd_ras.size):
             ccd = "{0:02}".format(j+1)
             fname="GOTO_"+ccd+"_20170331_"+visit

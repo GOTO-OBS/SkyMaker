@@ -47,7 +47,6 @@ def makelist(ra, dec, fname):
     d_lim_r = 2.*np.arcsin(np.sin(wid_r/4.)/np.cos(declim_r))
     ralim = ra+np.array([-1,1])*np.max(180.*d_lim_r/np.pi)
 
-    print ralim[0]
     #Query SDSS:
     query = "SELECT p.objid, p.ra, p.dec, p.g, "+\
     "p.deVRad_g, p.deVPhi_g, p.deVAB_g, "+\
