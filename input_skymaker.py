@@ -13,6 +13,8 @@ from astroquery.vizier import Vizier
 import matplotlib.pyplot as plt
 
 def makelist(ra, dec, fname):
+
+
     #Define size of camera in pixels:
     xsi = 8176.
     ysi = 6132.
@@ -44,7 +46,8 @@ def makelist(ra, dec, fname):
     wid_r = np.pi*wid/180.
     d_lim_r = 2.*np.arcsin(np.sin(wid_r/4.)/np.cos(declim_r))
     ralim = ra+np.array([-1,1])*np.max(180.*d_lim_r/np.pi)
-    
+
+    print ralim[0]
     #Query SDSS:
     query = "SELECT p.objid, p.ra, p.dec, p.g, "+\
     "p.deVRad_g, p.deVPhi_g, p.deVAB_g, "+\
@@ -56,6 +59,7 @@ def makelist(ra, dec, fname):
     "p.htmid*37 & 0x000000000000FFFF < (650 * 10)"
     res = SDSS.query_sql(query)
 
+    print res
     #Extract the values from the SDSS table:
     x = res['ra']
     y = res['dec']
@@ -127,5 +131,5 @@ def makelist(ra, dec, fname):
 #   use the same PSF for each set of twelve. In fact, we can probably assume
 #   the PSf remains stable for about 30 minutes (so 5 mount pointings).  
 
-fname="GOTO_01_20170323_00001"
-makelist(180.,30.,fname)
+#fname="GOTO_01_20170323_00001"
+#makelist(180.,30.,fname)

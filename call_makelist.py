@@ -1,7 +1,7 @@
 import numpy as np
 from astropy import wcs
 
-#from input_skymaker import makelist
+from input_skymaker import makelist
 
 def mount_pointing(x, y, \
                    width=4., height=4., \
@@ -17,7 +17,7 @@ def mount_pointing(x, y, \
     theta = np.pi*d_ra/180.
     ra = 2.*np.arcsin(np.sin(theta/2.)/\
                       np.cos(np.pi*dec/180.))
-    ra = 180.*ra/np.pi
+    ra = 180.*ra/np.pi+160
     
     return ra, dec
 
@@ -48,8 +48,9 @@ for y in ys:
         
         mount_ra, mount_dec = mount_pointing(x, y)
         ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec)
-        
+        print ccd_ras
+        print mount_ra
         for j in np.arange(ccd_ras.size):
             ccd = "{0:02}".format(j+1)
-            fname="GOTO_"+ccd+"_20170331_"+visit+".list"
-            #makelist(ccd_ras[j],ccd_decs[j],fname)
+            fname="GOTO_"+ccd+"_20170331_"+visit
+            makelist(ccd_ras[j],ccd_decs[j],fname)
