@@ -17,7 +17,7 @@ def mount_pointing(x, y, \
     theta = np.pi*d_ra/180.
     ra = 2.*np.arcsin(np.sin(theta/2.)/\
                       np.cos(np.pi*dec/180.))
-    ra = 180.*ra/np.pi+160
+    ra = 180.*ra/np.pi
     
     return ra, dec
 
