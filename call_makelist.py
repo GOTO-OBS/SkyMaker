@@ -1,4 +1,5 @@
 import numpy as np
+from shutil import copyfile
 from astropy import wcs
 
 from input_skymaker import makelist
@@ -38,8 +39,8 @@ def ccd_pointing(ra, dec, \
     
     return ccd_ra, ccd_dec
 
-xs = np.array([2,3,4])
-ys = np.array([15, 16, 17])
+xs = np.array([30,31,32])
+ys = np.array([2, 3, 4])
 i = 0
 for y in ys:
     for x in xs:
@@ -52,3 +53,10 @@ for y in ys:
             ccd = "{0:02}".format(j+1)
             fname="GOTO_"+ccd+"_20170331_"+visit
             makelist(ccd_ras[j],ccd_decs[j],fname)
+            #copyfile('goto.conf',str(fname)+'.conf')
+            #with open(str(fname)+'.conf', 'r') as f:
+            #   lines = f.readlines()
+            with open('goto.conf') as infile, open(str(fname)+'.conf', 'w') as outfile:
+                for line in infile:
+                    line = line.replace('goto.fits', str(fname)+'.fits')
+                    outfile.write(line)
