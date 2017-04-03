@@ -53,9 +53,7 @@ for y in ys:
             ccd = "{0:02}".format(j+1)
             fname="GOTO_"+ccd+"_20170331_"+visit
             makelist(ccd_ras[j],ccd_decs[j],fname)
-            #copyfile('goto.conf',str(fname)+'.conf')
-            #with open(str(fname)+'.conf', 'r') as f:
-            #   lines = f.readlines()
+            
             with open('goto.conf') as infile, open(str(fname)+'.conf', 'w') as outfile:
                 for line in infile:
                     line = line.replace('goto.fits', str(fname)+'.fits')
