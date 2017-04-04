@@ -2,8 +2,8 @@ import numpy as np
 from astropy import wcs
 import os
 from datetime import datetime
-
 from input_skymaker import makelist
+from edit_header import edit_header
 
 def mount_pointing(x, y, \
                    width=4., height=4., \
@@ -50,8 +50,11 @@ def ccd_pointing(ra, dec, \
     return ccd_ra, ccd_dec
 
 
-#Date of obs:
+#Date of obs and generate directory
+#for that date:
 date=datetime.strftime(datetime.now(), '%Y%m%d')
+if not os.path.exists(date):
+    os.makedirs(date)
 
 #Width and height of each chip in degs:
 xpix=8176
@@ -82,17 +85,33 @@ for y in ys:
         ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec,\
                                          width=xsi, height=ysi,\
                                          w_olap=10./60., h_olap=10./60.)
-        print mount_ra, mount_dec
+        
+        #Loop over the CCDs:
         for j in np.arange(ccd_ras.size):
+            #Get the CCD number and generate filename:
             ccd = "{0:02}".format(j+1)
             fname="GOTO_"+ccd+"_"+date+"_"+visit
+        
+            #Generate the list of stars/galaxies:
             makelist(ccd_ras[j],ccd_decs[j],"templist")
-            if not os.path.exists(date):
-                 os.makedirs(date)
-            with open('goto.conf') as infile, open(date+"/"+str(fname)+'.conf', 'w') as outfile:
+
+            #Write the necessary data into the .conf file: 
+            with open('goto.conf') as infile, \
+                 open(date+"/"+str(fname)+'.conf', 'w') as outfile:
                 for line in infile:
-                    line = line.replace('goto.fits', date+"/"+str(fname)+'.fits')
+                    #Filename of output:
+                    line = line.replace('goto.fits', \
+                                        date+"/"+str(fname)+'.fits')
+                    #Seeing FWHM:    
                     line = line.replace('2.96065834', '1')
                     outfile.write(line)
 
+            #Run SkyMaker with generated list and .conf:
             os.system('./bin/sky templist.list -c '+ date+"/"+str(fname)+'.conf')   
+
+            #Edit header of output .fits file:
+            #Here, the "1." is just a placeholder for the FWHM.
+            edit_header(date,ccd,visit,\
+                        ccd_ras[j],ccd_decs[j],\
+                        mount_ra, mount_dec,\
+                        1.)
