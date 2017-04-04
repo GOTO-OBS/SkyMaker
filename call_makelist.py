@@ -5,6 +5,8 @@ from datetime import datetime
 
 from input_skymaker import makelist
 
+#This is a trivial change.
+
 def mount_pointing(x, y, \
                    width=4., height=4., \
                    w_olap=0.1, h_olap=0.1):
