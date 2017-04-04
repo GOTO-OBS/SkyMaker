@@ -87,7 +87,8 @@ for y in ys:
             ccd = "{0:02}".format(j+1)
             fname="GOTO_"+ccd+"_"+date+"_"+visit
             makelist(ccd_ras[j],ccd_decs[j],"templist")
-            
+            if not os.path.exists(date):
+                 os.makedirs(date)
             with open('goto.conf') as infile, open(date+"/"+str(fname)+'.conf', 'w') as outfile:
                 for line in infile:
                     line = line.replace('goto.fits', date+"/"+str(fname)+'.fits')
