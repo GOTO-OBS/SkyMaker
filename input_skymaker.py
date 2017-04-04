@@ -58,7 +58,6 @@ def makelist(ra, dec, fname):
     "p.htmid*37 & 0x000000000000FFFF < (650 * 10)"
     res = SDSS.query_sql(query)
 
-    print res
     #Extract the values from the SDSS table:
     x = res['ra']
     y = res['dec']

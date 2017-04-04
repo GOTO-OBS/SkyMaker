@@ -15,10 +15,20 @@ def mount_pointing(x, y, \
     #where the RA pointing is.
     d_ra = x*(width - w_olap)
     theta = np.pi*d_ra/180.
-    ra = 2.*np.arcsin(np.sin(theta/2.)/\
-                      np.cos(np.pi*dec/180.))
-    ra = 180.*ra/np.pi
     
+    sin_theta = np.sin(theta/2.)/\
+                       np.cos(np.pi*dec/180.)
+    opp = False
+    if sin_theta>1:
+        sin_theta = 2.-sin_theta
+        opp = True
+        
+    ra = 2.*np.arcsin(sin_theta)
+    ra = 180.*ra/np.pi
+
+    if opp:
+        ra = 360-ra
+    print ra, dec
     return ra, dec
 
 def ccd_pointing(ra, dec, \
@@ -38,8 +48,9 @@ def ccd_pointing(ra, dec, \
     
     return ccd_ra, ccd_dec
 
-xs = np.array([2,3,4])
-ys = np.array([15, 16, 17])
+xs = np.arange(40, 45, 1)
+ys = np.arange(0, 5, 1)
+
 i = 0
 for y in ys:
     for x in xs:
@@ -48,7 +59,8 @@ for y in ys:
         
         mount_ra, mount_dec = mount_pointing(x, y)
         ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec)
-        for j in np.arange(ccd_ras.size):
-            ccd = "{0:02}".format(j+1)
-            fname="GOTO_"+ccd+"_20170331_"+visit
-            makelist(ccd_ras[j],ccd_decs[j],fname)
+
+        #for j in np.arange(ccd_ras.size):
+        #    ccd = "{0:02}".format(j+1)
+        #    fname="GOTO_"+ccd+"_20170331_"+visit
+        #    makelist(ccd_ras[j], ccd_decs[j], fname)
