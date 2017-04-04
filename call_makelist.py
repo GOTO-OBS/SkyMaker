@@ -5,7 +5,7 @@ from datetime import datetime
 
 from input_skymaker import makelist
 
-#This is an edit on master"
+#Testing branching"
 
 def mount_pointing(x, y, \
                    width=4., height=4., \
