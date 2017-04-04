@@ -1,7 +1,7 @@
 import numpy as np
-from shutil import copyfile
 from astropy import wcs
 import os
+from datetime import datetime
 
 from input_skymaker import makelist
 
@@ -51,7 +51,7 @@ def ccd_pointing(ra, dec, \
 
 
 #Date of obs:
-date="20170404"
+date=datetime.strftime(datetime.now(), '%Y%m%d')
 
 #Width and height of each chip in degs:
 xpix=8176
