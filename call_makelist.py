@@ -1,6 +1,7 @@
 import numpy as np
 from shutil import copyfile
 from astropy import wcs
+import os
 
 from input_skymaker import makelist
 
@@ -49,6 +50,9 @@ def ccd_pointing(ra, dec, \
     return ccd_ra, ccd_dec
 
 
+#Date of obs:
+date="20170404"
+
 #Width and height of each chip in degs:
 xpix=8176
 ypix=6132
@@ -59,8 +63,8 @@ ysi=1.24*ypix/3600.
 xpsi = 2.*xsi-(10./60.)
 ypsi = 2.*ysi-(10./60.)
 
-xs = np.array([35,36,37])
-ys = np.array([10, 11, 12])
+xs = np.array([1])
+ys = np.array([1])
 i = 0
 for y in ys:
     for x in xs:
@@ -78,13 +82,16 @@ for y in ys:
         ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec,\
                                          width=xsi, height=ysi,\
                                          w_olap=10./60., h_olap=10./60.)
-        
+        print mount_ra, mount_dec
         for j in np.arange(ccd_ras.size):
             ccd = "{0:02}".format(j+1)
-            fname="GOTO_"+ccd+"_20170331_"+visit
+            fname="GOTO_"+ccd+"_"+date+"_"+visit
             makelist(ccd_ras[j],ccd_decs[j],"templist")
             
-            with open('goto.conf') as infile, open(str(fname)+'.conf', 'w') as outfile:
+            with open('goto.conf') as infile, open(date+"/"+str(fname)+'.conf', 'w') as outfile:
                 for line in infile:
-                    line = line.replace('goto.fits', str(fname)+'.fits')
+                    line = line.replace('goto.fits', date+"/"+str(fname)+'.fits')
+                    line = line.replace('2.96065834', '1')
                     outfile.write(line)
+
+            os.system('./bin/sky templist.list -c '+ date+"/"+str(fname)+'.conf')   
