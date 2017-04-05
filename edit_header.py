@@ -23,6 +23,7 @@ def edit_header(date,ccd,visit,\
     header.append('TEL-RA','TEL-DEC','CRVAL1','CRVAL2') 
     header.append('EPOCH','EQUINOX','CTYPE1','CTYPE2')
     header.append('CD1_1','CD2_1','CD1_2', 'CD2_2')
+    header.append('CRPIX1','CRPIX2')
     
     header['DATE-OBS'] = str(date)
     header['IMGTYPE'] = 'OBJECT'
@@ -35,7 +36,9 @@ def edit_header(date,ccd,visit,\
     header['TEL-DEC'] = Angle(mount_dec, u.deg).to_string(unit=u.degree, sep=':')
     header['CRVAL1'] = ccd_ra
     header['CRVAL2'] = ccd_dec
-
+    header['CRPIX1'] = 4093
+    header['CRPIX2'] = 3066
+    
     header['EPOCH'] = 2000
     header['EQUINOX'] =2000
     header['CTYPE1'] = 'RA---TAN'
