@@ -42,8 +42,8 @@ def edit_header(date,ccd,visit,\
     header['CTYPE2'] = 'DEC---TAN'
 
     header['CD1_1'] = 0
-    header['CD2_1'] = -0.00035
-    header['CD1_2'] = 0.00035
+    header['CD2_1'] = -0.0003444444
+    header['CD1_2'] = 0.0003444444
     header['CD2_2'] = 0
 
     #You'll need to add:
