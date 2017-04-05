@@ -22,7 +22,8 @@ def edit_header(date,ccd,visit,\
     header.append('IMGTYPE','INSTRUME','RUN','FILTER')
     header.append('TEL-RA','TEL-DEC','CRVAL1','CRVAL2') 
     header.append('EPOCH','EQUINOX','CTYPE1','CTYPE2')
-
+    header.append('CD1_1','CD2_1','CD1_2', 'CD2_2')
+    
     header['DATE-OBS'] = str(date)
     header['IMGTYPE'] = 'OBJECT'
 
@@ -39,7 +40,11 @@ def edit_header(date,ccd,visit,\
     header['EQUINOX'] =2000
     header['CTYPE1'] = 'RA---TAN'
     header['CTYPE2'] = 'DEC---TAN'
-    
+
+    header['CD1_1'] = 0
+    header['CD2_1'] = -0.00035
+    header['CD1_2'] = 0.00035
+    header['CD2_2'] = 0
 
     #You'll need to add:
     #WCS, FWHM, mount (RA,Dec), CCD (RA,Dec),
