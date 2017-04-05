@@ -36,7 +36,7 @@ def edit_header(date,ccd,visit,\
     header['TEL-DEC'] = Angle(mount_dec, u.deg).to_string(unit=u.degree, sep=':')
     header['CRVAL1'] = ccd_ra
     header['CRVAL2'] = ccd_dec
-    header['CRPIX1'] = 4093
+    header['CRPIX1'] = 4088
     header['CRPIX2'] = 3066
     
     header['EPOCH'] = 2000
