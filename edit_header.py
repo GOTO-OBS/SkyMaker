@@ -25,12 +25,12 @@ def edit_header(date,ccd,visit,\
 
     header['DATE-OBS'] = str(date)
     header['IMGTYPE'] = 'OBJECT'
-    header['INSTRUME'] =str(ccd)
 
+    header['INSTRUME'] =str(ccd)
     header['RUN'] = str(visit)
     header['FILTER'] = 'Clear'
 
-    header['TEL-RA'] = Angle(mount_ra, u.deg).to_string(unit=u.degree, sep=':')
+    header['TEL-RA'] = Angle(mount_ra, u.deg).to_string(unit=u.hour, sep=':')
     header['TEL-DEC'] = Angle(mount_dec, u.deg).to_string(unit=u.degree, sep=':')
     header['CRVAL1'] = ccd_ra
     header['CRVAL2'] = ccd_dec
