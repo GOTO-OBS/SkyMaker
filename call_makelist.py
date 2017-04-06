@@ -90,28 +90,33 @@ for y in ys:
         for j in np.arange(ccd_ras.size):
             #Get the CCD number and generate filename:
             ccd = "{0:02}".format(j+1)
-            fname="GOTO_"+ccd+"_"+date+"_"+visit
-        
+            lname="GOTO_"+ccd+"_"+date+"_"+visit
+            
             #Generate the list of stars/galaxies:
-            makelist(ccd_ras[j],ccd_decs[j],"templist")
+            makelist(ccd_ras[j],ccd_decs[j],date+"/"+lname)
 
-            #Write the necessary data into the .conf file: 
-            with open('goto.conf') as infile, \
-                 open(date+"/"+str(fname)+'.conf', 'w') as outfile:
-                for line in infile:
-                    #Filename of output:
-                    line = line.replace('goto.fits', \
-                                        date+"/"+str(fname)+'.fits')
-                    #Seeing FWHM:    
-                    line = line.replace('2.96065834', '1')
-                    outfile.write(line)
+            #Three exposures per pointing:
+            for h in np.arange(3):
+                expo = "{0:02}".format(h+1)
+                fname = lname+"_"+expo
+                
+                #Write the necessary data into the .conf file: 
+                with open('goto.conf') as infile, \
+                     open(date+"/"+fname+'.conf', 'w') as outfile:
+                        for line in infile:
+                                #Filename of output:
+                                line = line.replace('goto.fits', \
+                                                    date+"/"+fname+'.fits')
+                                #Seeing FWHM:    
+                                line = line.replace('2.96065834', '1')
+                                outfile.write(line)
 
-            #Run SkyMaker with generated list and .conf:
-            os.system('./bin/sky templist.list -c '+ date+"/"+str(fname)+'.conf')   
+                #Run SkyMaker with generated list and .conf:
+                os.system('sky templist.list -c '+ date+"/"+fname+'.conf')   
 
-            #Edit header of output .fits file:
-            #Here, the "1." is just a placeholder for the FWHM.
-            edit_header(date,ccd,visit,\
-                        ccd_ras[j],ccd_decs[j],\
-                        mount_ra, mount_dec,\
-                        1.)
+                #Edit header of output .fits file:
+                #Here, the "1." is just a placeholder for the FWHM.
+                edit_header(date,ccd,visit,expo,\
+                            ccd_ras[j],ccd_decs[j],\
+                            mount_ra, mount_dec,\
+                            1.)
