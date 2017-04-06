@@ -56,6 +56,7 @@ date=datetime.strftime(datetime.now(), '%Y%m%d')
 if not os.path.exists(date):
     os.makedirs(date)
 
+
 #Width and height of each chip in degs:
 xpix=8176
 ypix=6132
@@ -112,7 +113,7 @@ for y in ys:
                                 outfile.write(line)
 
                 #Run SkyMaker with generated list and .conf:
-                os.system('sky templist.list -c '+ date+"/"+fname+'.conf')   
+                os.system('./bin/sky templist.list -c '+ date+"/"+fname+'.conf')   
 
                 #Edit header of output .fits file:
                 #Here, the "1." is just a placeholder for the FWHM.
