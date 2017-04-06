@@ -15,7 +15,7 @@ def edit_header(date,ccd,visit,expo,\
                 fwhm):
 
     #Construct filename and read file:
-    fname="GOTO_"+ccd+"_"+date+"_"+visit+"_"+expo+".fits"                
+    fname="fits/GOTO_"+ccd+"_"+date+"_"+visit+"_"+expo+".fits"                
     data, header = fits.getdata(os.path.join(date,fname), header=True)
 
     #Add the necessary information:

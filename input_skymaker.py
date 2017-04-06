@@ -12,7 +12,7 @@ from astroquery.vizier import Vizier
 
 import matplotlib.pyplot as plt
 
-def makelist(ra, dec, fname):
+def makelist(ra, dec, ccd, fname):
 
     #Define size of camera in pixels:
     xsi = 8176.
@@ -87,7 +87,7 @@ def makelist(ra, dec, fname):
     
     #Generate WCS to convert (RA,Dec) to (x,y)
     w = wcs.WCS(naxis=2)
-    w.wcs.crpix = [4088, 3066]
+    w.wcs.crpix = np.array([4088, 3066])+np.random.normal(scale=3.,size=2)
     w.wcs.cdelt = np.array([3.444e-4, 3.444e-4])
     w.wcs.crval = [ra, dec] #Pointing position of telescope.
     w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
@@ -105,7 +105,7 @@ def makelist(ra, dec, fname):
     yps =  worlds[:,1]
     
     #Write SDSS to file, if type==6, then it's a star, otherwise galaxy:
-    myfile = open('templist.list','w')
+    myfile = open('templist'+ccd+'.list','w')
     regfile = open(fname+'.reg','w')
     regfile.write('fk5\n')
     for i in range(0,x.size):
