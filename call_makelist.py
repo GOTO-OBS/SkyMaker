@@ -55,7 +55,13 @@ def ccd_pointing(ra, dec, \
 date=datetime.strftime(datetime.now(), '%Y%m%d')
 if not os.path.exists(date):
     os.makedirs(date)
-
+    os.makedirs(date+'/fits')
+    os.makedirs(date+'/conf')
+    os.makedirs(date+'/list')
+    os.makedirs(date+'/reg')
+    
+#Define the "mean" FWHM for that night:
+fwhm_n = 10.**np.random.normal(loc=np.log10(0.9), scale=0.15)
 
 #Width and height of each chip in degs:
 xpix=8176
@@ -87,37 +93,40 @@ for y in ys:
                                          width=xsi, height=ysi,\
                                          w_olap=10./60., h_olap=10./60.)
         
-        #Loop over the CCDs:
+        #Make a source list for each CCD:
         for j in np.arange(ccd_ras.size):
-            #Get the CCD number and generate filename:
             ccd = "{0:02}".format(j+1)
             lname="GOTO_"+ccd+"_"+date+"_"+visit
+            makelist(ccd_ras[j], ccd_decs[j], ccd, lname)
             
-            #Generate the list of stars/galaxies:
-            makelist(ccd_ras[j],ccd_decs[j],date+"/"+lname)
+        #Three exposures per pointing:
+        for h in np.arange(3):
+            expo = "{0:02}".format(h+1)
+            fwhm_p = 10.**np.random.normal(loc=np.log10(fwhm_n), scale=0.04)
 
-            #Three exposures per pointing:
-            for h in np.arange(3):
-                expo = "{0:02}".format(h+1)
-                fname = lname+"_"+expo
-                
+            #Loop over the CCDs:
+            for j in np.arange(ccd_ras.size):
+                ccd = "{0:02}".format(j+1)
+                fname = "GOTO_"+ccd+"_"+date+"_"+visit+"_"+expo
+
                 #Write the necessary data into the .conf file: 
                 with open('goto.conf') as infile, \
-                     open(date+"/"+fname+'.conf', 'w') as outfile:
-                        for line in infile:
-                                #Filename of output:
-                                line = line.replace('goto.fits', \
-                                                    date+"/"+fname+'.fits')
-                                #Seeing FWHM:    
-                                line = line.replace('2.96065834', '1')
-                                outfile.write(line)
+                        open(date+"/conf/"+fname+'.conf', 'w') as outfile:
+                    for line in infile:
+                        #Filename of output:
+                        line = line.replace('goto.fits', \
+                                                date+"/fits/"+fname+'.fits')
+                        #Seeing FWHM:    
+                        line = line.replace('2.96065834', str(fwhm_p))
+                        outfile.write(line)
 
                 #Run SkyMaker with generated list and .conf:
-                os.system('./bin/sky templist.list -c '+ date+"/"+fname+'.conf')   
-
+                os.system('sky templist'+ccd+'.list -c '+ date+"/conf/"+fname+'.conf')   
+                os.rename(date+'/fits/'+fname+'.list',date+'/list/'+fname+'.list')
+                
                 #Edit header of output .fits file:
                 #Here, the "1." is just a placeholder for the FWHM.
                 edit_header(date,ccd,visit,expo,\
                             ccd_ras[j],ccd_decs[j],\
                             mount_ra, mount_dec,\
-                            1.)
+                            fwhm_p)
