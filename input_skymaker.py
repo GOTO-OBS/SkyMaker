@@ -35,9 +35,9 @@ def makelist(ra, dec, ccd, fname):
                             catalog=["UCAC4"])[0]
 
     #Extract values from UCAC4
-    xs = result['_RAJ2000']
-    ys = result['_DEJ2000']
-    ms = result['Vmag']
+    xs = np.array(result['_RAJ2000'])
+    ys = np.array(result['_DEJ2000'])
+    ms = np.array(result['Vmag'])
 
     #For SDSS, need to calculate bounding box:
     declim = dec+np.array([-hei,hei])/2.
@@ -58,46 +58,47 @@ def makelist(ra, dec, ccd, fname):
     res = SDSS.query_sql(query)
 
     #Extract the values from the SDSS table:
-    x = res['ra']
-    y = res['dec']
-    m = res['g']
-    t = res['type']
-    a = res['deVRad_g']
-    ba = res['deVAB_g']
-    pa = res['deVPhi_g']
+    x = np.array(res['ra'])
+    y = np.array(res['dec'])
+    m = np.array(res['g'])
+    t = np.array(res['type'])
+    a = np.array(res['deVRad_g'])
+    ba = np.array(res['deVAB_g'])
+    pa = np.array(res['deVPhi_g'])
+    sat = np.array(res['SAT'])
     
     #Remove the saturated sources:
-    ma = np.ma.masked_where(res['SAT']!=0, res['SAT'])
-    x = x[~ma.mask].copy()
-    y = y[~ma.mask].copy()
-    m = m[~ma.mask].copy()
-    t = t[~ma.mask].copy()
-    a = a[~ma.mask].copy()
-    ba = ba[~ma.mask].copy()
-    pa = pa[~ma.mask].copy()
+    ma = np.where(sat == 0)
+    x = x[ma]
+    y = y[ma]
+    m = m[ma]
+    t = t[ma]
+    a = a[ma]
+    ba = ba[ma]
+    pa = pa[ma]
 
     #Find and remove matching sources:
     c = coord.SkyCoord(ra=x*u.degree, dec=y*u.degree)
-    cs = coord.SkyCoord(ra=xs, dec=ys)
+    cs = coord.SkyCoord(ra=xs*u.degree, dec=ys*u.degree)
     idx, d2d, d3d = cs.match_to_catalog_sky(c)
     match = np.where(d2d.value*3600. > 1.0)
     xs = xs[match]
     ys = ys[match]
     ms = ms[match]
-    
+
     #Generate WCS to convert (RA,Dec) to (x,y)
     w = wcs.WCS(naxis=2)
     w.wcs.crpix = np.array([4088, 3066])+np.random.normal(scale=3.,size=2)
     w.wcs.cdelt = np.array([3.444e-4, 3.444e-4])
     w.wcs.crval = [ra, dec] #Pointing position of telescope.
     w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
-    
+
     pixcrd = np.column_stack((x,y))
     pixcrds = np.column_stack((xs,ys))
     
     world =  w.wcs_world2pix(pixcrd, 1)
     worlds =  w.wcs_world2pix(pixcrds, 1)
-    
+
     xp =  world[:,0]
     yp =  world[:,1]
     
@@ -121,8 +122,10 @@ def makelist(ra, dec, ccd, fname):
     for i in range(0,xs.size):
             myfile.write((str(100)+' '+str(xps[i])+' '+str(yps[i])+' '+str(ms[i])+'\n'))
             regfile.write('circle('+str(xs[i])+','+str(ys[i])+',5") # color=red\n')              
+
     myfile.close()
     regfile.close()
+
 #What needs to be done now is:
 # - Generate a list of pointings for the mount, covering ~100sq deg.
 #   Note that SDSS only covers certain parts of the sky, so you need

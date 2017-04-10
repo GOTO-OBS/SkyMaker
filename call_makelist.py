@@ -73,60 +73,60 @@ ysi=1.24*ypix/3600.
 xpsi = 2.*xsi-(10./60.)
 ypsi = 2.*ysi-(10./60.)
 
-xs = np.array([1])
-ys = np.array([1])
+xs = np.array([32,33,34,35,31,32,33,34,31,32,33,34,30,31,32,33])
+ys = np.array([3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6])
+
 i = 0
-for y in ys:
-    for x in xs:
-        i = i+1
-        visit = "{0:04}".format(i)
+for m in np.arange(xs.size):
+    i = i+1
+    visit = "{0:04}".format(i)
         
         #Get (RA,Dec) of mount pointing:
         #Overlap between pointings is 15':
-        mount_ra, mount_dec = mount_pointing(x, y,\
-                                             width=xpsi, height=ypsi,\
-                                             w_olap=15./60., h_olap=15./60.)
+    mount_ra, mount_dec = mount_pointing(xs[m], ys[m],\
+                                         width=xpsi, height=ypsi,\
+                                         w_olap=15./60., h_olap=15./60.)
                                              
         #Get (RA,Dec) of CCDs:
         #Overlap between CCDs is 10':
-        ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec,\
-                                         width=xsi, height=ysi,\
-                                         w_olap=10./60., h_olap=10./60.)
+    ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec,\
+                                     width=xsi, height=ysi,\
+                                     w_olap=10./60., h_olap=10./60.)
         
         #Make a source list for each CCD:
-        for j in np.arange(ccd_ras.size):
-            ccd = "{0:02}".format(j+1)
-            lname="GOTO_"+ccd+"_"+date+"_"+visit
-            makelist(ccd_ras[j], ccd_decs[j], ccd, lname)
+    for j in np.arange(ccd_ras.size):
+        ccd = "{0:02}".format(j+1)
+        lname="GOTO_"+ccd+"_"+date+"_"+visit
+        makelist(ccd_ras[j], ccd_decs[j], ccd, date+"/reg/"+lname)
             
         #Three exposures per pointing:
-        for h in np.arange(3):
-            expo = "{0:02}".format(h+1)
-            fwhm_p = 10.**np.random.normal(loc=np.log10(fwhm_n), scale=0.04)
+    for h in np.arange(3):
+        expo = "{0:02}".format(h+1)
+        fwhm_p = 10.**np.random.normal(loc=np.log10(fwhm_n), scale=0.04)
 
             #Loop over the CCDs:
-            for j in np.arange(ccd_ras.size):
-                ccd = "{0:02}".format(j+1)
-                fname = "GOTO_"+ccd+"_"+date+"_"+visit+"_"+expo
+        for j in np.arange(ccd_ras.size):
+            ccd = "{0:02}".format(j+1)
+            fname = "GOTO_"+ccd+"_"+date+"_"+visit+"_"+expo
 
                 #Write the necessary data into the .conf file: 
-                with open('goto.conf') as infile, \
-                        open(date+"/conf/"+fname+'.conf', 'w') as outfile:
-                    for line in infile:
+            with open('goto.conf') as infile, \
+                    open(date+"/conf/"+fname+'.conf', 'w') as outfile:
+                for line in infile:
                         #Filename of output:
-                        line = line.replace('goto.fits', \
+                    line = line.replace('goto.fits', \
                                                 date+"/fits/"+fname+'.fits')
                         #Seeing FWHM:    
-                        line = line.replace('2.96065834', str(fwhm_p))
-                        outfile.write(line)
+                    line = line.replace('2.96065834', str(fwhm_p))
+                    outfile.write(line)
 
                 #Run SkyMaker with generated list and .conf:
-                os.system('sky templist'+ccd+'.list -c '+ date+"/conf/"+fname+'.conf')   
-                os.rename(date+'/fits/'+fname+'.list',date+'/list/'+fname+'.list')
+            os.system('sky templist'+ccd+'.list -c '+ date+"/conf/"+fname+'.conf')   
+            os.rename(date+'/fits/'+fname+'.list',date+'/list/'+fname+'.list')
                 
                 #Edit header of output .fits file:
                 #Here, the "1." is just a placeholder for the FWHM.
-                edit_header(date,ccd,visit,expo,\
-                            ccd_ras[j],ccd_decs[j],\
-                            mount_ra, mount_dec,\
-                            fwhm_p)
+            edit_header(date,ccd,visit,expo,\
+                        ccd_ras[j],ccd_decs[j],\
+                        mount_ra, mount_dec,\
+                        fwhm_p)
