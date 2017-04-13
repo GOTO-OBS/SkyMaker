@@ -12,7 +12,7 @@ from astroquery.vizier import Vizier
 
 import matplotlib.pyplot as plt
 
-def makelist(ra, dec, ccd, fname):
+def makelist(ra, dec, ccd, fname, variability=False):
 
     #Define size of camera in pixels:
     xsi = 8176.
@@ -27,17 +27,12 @@ def makelist(ra, dec, ccd, fname):
     v.ROW_LIMIT=-1
 
     #Query UCAC4
-    result = v.query_region(\
+    ucac = v.query_region(\
                             coord.SkyCoord(ra=ra, dec=dec,\
                             unit=(u.deg, u.deg),\
                             frame='icrs'),\
                             height=str(hei+1)+"d", width=str(wid+1)+"d",\
                             catalog=["UCAC4"])[0]
-
-    #Extract values from UCAC4
-    xs = np.array(result['_RAJ2000'])
-    ys = np.array(result['_DEJ2000'])
-    ms = np.array(result['Vmag'])
 
     #For SDSS, need to calculate bounding box:
     declim = dec+np.array([-hei,hei])/2.
@@ -55,36 +50,33 @@ def makelist(ra, dec, ccd, fname):
     "p.dec BETWEEN "+str(declim[0])+" AND "+str(declim[1])+" AND "+\
     "p.g BETWEEN 13 AND 21"# AND "+\
     #"p.htmid*37 & 0x000000000000FFFF < (650 * 10)"
-    res = SDSS.query_sql(query)
+    sdss = SDSS.query_sql(query)
 
-    #Extract the values from the SDSS table:
-    x = np.array(res['ra'])
-    y = np.array(res['dec'])
-    m = np.array(res['g'])
-    t = np.array(res['type'])
-    a = np.array(res['deVRad_g'])
-    ba = np.array(res['deVAB_g'])
-    pa = np.array(res['deVPhi_g'])
-    sat = np.array(res['SAT'])
-    
-    #Remove the saturated sources:
-    ma = np.where(sat == 0)
-    x = x[ma]
-    y = y[ma]
-    m = m[ma]
-    t = t[ma]
-    a = a[ma]
-    ba = ba[ma]
-    pa = pa[ma]
+    #Remove saturated sources and separate gals from stars:
+    o = np.where(sdss['SAT'] == 0)
+    sdss = sdss[o]
 
     #Find and remove matching sources:
-    c = coord.SkyCoord(ra=x*u.degree, dec=y*u.degree)
-    cs = coord.SkyCoord(ra=xs*u.degree, dec=ys*u.degree)
+    c = coord.SkyCoord(ra=sdss['ra']*u.degree, dec=sdss['dec']*u.degree)
+    cs = coord.SkyCoord(ra=np.array(ucac['_RAJ2000'])*u.degree, \
+                        dec=np.array(ucac['_DEJ2000'])*u.degree)
     idx, d2d, d3d = cs.match_to_catalog_sky(c)
     match = np.where(d2d.value*3600. > 1.0)
-    xs = xs[match]
-    ys = ys[match]
-    ms = ms[match]
+    ucac = ucac[match]
+
+    #Group stars from SDSS and UCAC together: 
+    o = np.where(sdss['type'] == 6)
+    sdss_stars = sdss[o]
+    stars = np.append(np.array([ucac['_RAJ2000'], ucac['_DEJ2000'], ucac['Vmag']]),\
+                      np.array([sdss_stars['ra'], sdss_stars['dec'], sdss_stars['g']]),\
+                      axis=1)
+
+    #Extract gals from SDSS:
+    o = np.where(sdss['type'] != 6)
+    sdss_gals = sdss[o]
+    gals = np.array([sdss_gals['ra'], sdss_gals['dec'],\
+                     sdss_gals['g'],\
+                     sdss_gals['deVRad_g'], sdss_gals['deVAB_g'], sdss_gals['deVPhi_g']])
 
     #Generate WCS to convert (RA,Dec) to (x,y)
     w = wcs.WCS(naxis=2)
@@ -93,39 +85,56 @@ def makelist(ra, dec, ccd, fname):
     w.wcs.crval = [ra, dec] #Pointing position of telescope.
     w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
 
-    pixcrd = np.column_stack((x,y))
-    pixcrds = np.column_stack((xs,ys))
+    pixcrds = np.column_stack((stars[0,:],stars[1,:]))
+    pixcrdg = np.column_stack((gals[0,:], gals[1,:]))
     
-    world =  w.wcs_world2pix(pixcrd, 1)
+    worldg =  w.wcs_world2pix(pixcrdg, 1)
     worlds =  w.wcs_world2pix(pixcrds, 1)
+    
+    gals[0,:] =  worldg[:,0]
+    gals[1,:] =  worldg[:,1]
+    
+    stars[0,:] =  worlds[:,0]
+    stars[1,:] =  worlds[:,1]
 
-    xp =  world[:,0]
-    yp =  world[:,1]
-    
-    xps =  worlds[:,0]
-    yps =  worlds[:,1]
-    
-    #Write SDSS to file, if type==6, then it's a star, otherwise galaxy:
+    ind = [-1]
+    if variability:
+        #Select 0.5% of m<19 stars and add random variation:
+        varyfile = open(fname+'.var','w')
+        bright = np.squeeze(np.where((stars[2,:]<19) &\
+                                      (stars[0,:]>0) & (stars[0,:]<xsi) &\
+                                      (stars[1,:]>0) & (stars[1,:]<ysi)))
+        n_vary = np.round(0.005*(np.size(bright)))
+        if n_vary > 0:
+            ind = np.random.choice(bright, n_vary, replace=False)
+            orig = stars[2,ind]
+            stars[2,ind] = stars[2,ind] + np.random.normal(0, 1, ind.size)
+            for i in range(0,np.size(ind)):
+                varyfile.write(str(stars[0,ind[i]])+', '+str(stars[1,ind[i]])+', '+\
+                               str(orig[i])+', '+str(stars[2,ind[i]])+'\n')
+            
+    #Write stars to file:
     myfile = open('templist'+ccd+'.list','w')
     regfile = open(fname+'.reg','w')
-    regfile.write('fk5\n')
-    for i in range(0,x.size):
-        if t[i] == 6:
-            myfile.write((str(100)+' '+str(xp[i])+' '+str(yp[i])+' '+str(m[i])+'\n'))
+    regfile.write('image\n')
+    
+    for i in range(0,(stars.shape)[1]):
+        myfile.write((str(100)+' '+str(stars[0,i])+' '+str(stars[1,i])+' '+str(stars[2,i]))+'\n')
+        if np.any(ind == i):
+            regfile.write('circle('+str(stars[0,i])+','+str(stars[1,i])+',3) #color=blue\n')
         else:
-            myfile.write((str(200)+' '+str(xp[i])+' '+str(yp[i])+' '+str(m[i])+' ' +\
-                        str(0)+' ' +str(0)+' ' +str(0)+' ' +str(0)+' ' + str(a[i])+' '+\
-                        str(ba[i])+' '+str(pa[i])+'\n'))
-        regfile.write('circle('+str(x[i])+','+str(y[i])+',5")\n')
-
-    #Write UCAC4 to file (all stars):
-    for i in range(0,xs.size):
-            myfile.write((str(100)+' '+str(xps[i])+' '+str(yps[i])+' '+str(ms[i])+'\n'))
-            regfile.write('circle('+str(xs[i])+','+str(ys[i])+',5") # color=red\n')              
-
+            regfile.write('circle('+str(stars[0,i])+','+str(stars[1,i])+',3)\n')
+            
+    #Write galss to file:
+    for i in range(0,(gals.shape)[1]):
+        myfile.write((str(200)+' '+str(gals[0,i])+' '+str(gals[1,i])+' '+str(gals[2,i])+' ' +\
+                      str(0)+' ' +str(0)+' ' +str(0)+' ' +str(0)+' ' + str(gals[3,i])+' '+\
+                      str(gals[4,i])+' '+str(gals[5,i])+'\n'))
+        regfile.write('circle('+str(gals[0,i])+','+str(gals[1,i])+',3) #color=red\n')
+    
     myfile.close()
     regfile.close()
-
+    
 #What needs to be done now is:
 # - Generate a list of pointings for the mount, covering ~100sq deg.
 #   Note that SDSS only covers certain parts of the sky, so you need
