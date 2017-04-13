@@ -76,6 +76,9 @@ ypsi = 2.*ysi-(10./60.)
 xs = np.array([32,33,34,35,31,32,33,34,31,32,33,34,30,31,32,33])
 ys = np.array([3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6])
 
+#xs = np.array([32])
+#ys = np.array([3])
+
 i = 0
 for m in np.arange(xs.size):
     i = i+1
@@ -97,7 +100,7 @@ for m in np.arange(xs.size):
     for j in np.arange(ccd_ras.size):
         ccd = "{0:02}".format(j+1)
         lname="GOTO_"+ccd+"_"+date+"_"+visit
-        makelist(ccd_ras[j], ccd_decs[j], ccd, date+"/reg/"+lname)
+        makelist(ccd_ras[j], ccd_decs[j], ccd, date+"/reg/"+lname, variability=True)
             
         #Three exposures per pointing:
     for h in np.arange(3):
