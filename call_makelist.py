@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from input_skymaker import makelist
 from edit_header import edit_header
+import matplotlib.pyplot as plt
 
 def mount_pointing(x, y, \
                    width=4., height=4., \
@@ -61,7 +62,8 @@ if not os.path.exists(date):
     os.makedirs(date+'/reg')
     
 #Define the "mean" FWHM for that night:
-fwhm_n = 10.**np.random.normal(loc=np.log10(0.9), scale=0.15)
+fwhm_n = 10.**np.random.normal(loc=np.log10(1.1), scale=0.15, size=1)
+fwhm_n = np.clip(fwhm_n,0.8,10.)
 
 #Width and height of each chip in degs:
 xpix=8176
