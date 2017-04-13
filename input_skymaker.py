@@ -48,7 +48,7 @@ def makelist(ra, dec, ccd, fname, variability=False):
     "FROM PhotoPrimary AS p "+\
     "WHERE  p.ra BETWEEN "+str(ralim[0])+" AND "+str(ralim[1])+" AND "+\
     "p.dec BETWEEN "+str(declim[0])+" AND "+str(declim[1])+" AND "+\
-    "p.g BETWEEN 13 AND 21"# AND "+\
+    "p.g BETWEEN 16 AND 22"# AND "+\
     #"p.htmid*37 & 0x000000000000FFFF < (650 * 10)"
     sdss = SDSS.query_sql(query)
 
