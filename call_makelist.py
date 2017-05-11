@@ -54,7 +54,6 @@ def ccd_pointing(ra, dec, \
 #Date of obs and generate directory
 #for that date:
 date=datetime.strftime(datetime.now(), '%Y%m%d')
-date="21000101"
 if not os.path.exists(date):
     os.makedirs(date)
     os.makedirs(date+'/fits')
