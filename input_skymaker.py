@@ -10,7 +10,7 @@ from astropy import coordinates as coord
 from astroquery.sdss import SDSS
 from astroquery.vizier import Vizier
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 def makelist(ra, dec, ccd, date, lname, variability=False):
 
@@ -107,7 +107,7 @@ def makelist(ra, dec, ccd, date, lname, variability=False):
         bright = np.squeeze(np.where((stars[2,:]<19) &\
                                       (stars[0,:]>0) & (stars[0,:]<xsi) &\
                                       (stars[1,:]>0) & (stars[1,:]<ysi)))
-        n_vary = np.round(0.005*(np.size(bright)))
+        n_vary = int(np.round(0.005*(np.size(bright))))
         if n_vary > 0:
             ind = np.random.choice(bright, n_vary, replace=False)
             orig = stars[2,ind]

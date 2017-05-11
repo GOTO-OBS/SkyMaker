@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from input_skymaker import makelist
 from edit_header import edit_header
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 def mount_pointing(x, y, \
                    width=4., height=4., \
@@ -54,13 +54,14 @@ def ccd_pointing(ra, dec, \
 #Date of obs and generate directory
 #for that date:
 date=datetime.strftime(datetime.now(), '%Y%m%d')
+date="21000101"
 if not os.path.exists(date):
     os.makedirs(date)
     os.makedirs(date+'/fits')
     os.makedirs(date+'/conf')
     os.makedirs(date+'/list')
     os.makedirs(date+'/reg')
-    os.makedirs(date+'/vars')
+    os.makedirs(date+'/var')
     
 #Define the "mean" FWHM for that night:
 fwhm_n = 10.**np.random.normal(loc=np.log10(1.55), scale=0.12, size=1)
@@ -106,7 +107,7 @@ for m in np.arange(xs.size):
     for j in np.arange(ccd_ras.size):
         ccd = "{0:02}".format(j+1)
         lname="GOTO_"+ccd+"_"+date+"_"+visit
-        makelist(ccd_ras[j], ccd_decs[j], ccd, date+"/reg/"+lname, variability=True)
+        makelist(ccd_ras[j], ccd_decs[j], ccd, date, lname, variability=True)
             
         #Three exposures per pointing:
     for h in np.arange(3):
