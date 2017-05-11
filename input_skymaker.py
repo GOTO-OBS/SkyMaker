@@ -12,8 +12,11 @@ from astroquery.vizier import Vizier
 
 import matplotlib.pyplot as plt
 
-def makelist(ra, dec, ccd, fname, variability=False):
+def makelist(ra, dec, ccd, date, lname, variability=False):
 
+    vname = date+'/var/'+lname+'.var'
+    rname = date+'/reg/'+lname+'.reg'
+    
     #Define size of camera in pixels:
     xsi = 8176.
     ysi = 6132.
@@ -100,7 +103,7 @@ def makelist(ra, dec, ccd, fname, variability=False):
     ind = [-1]
     if variability:
         #Select 0.5% of m<19 stars and add random variation:
-        varyfile = open(fname+'.var','w')
+        varyfile = open(vname,'w')
         bright = np.squeeze(np.where((stars[2,:]<19) &\
                                       (stars[0,:]>0) & (stars[0,:]<xsi) &\
                                       (stars[1,:]>0) & (stars[1,:]<ysi)))
@@ -115,7 +118,7 @@ def makelist(ra, dec, ccd, fname, variability=False):
             
     #Write stars to file:
     myfile = open('templist'+ccd+'.list','w')
-    regfile = open(fname+'.reg','w')
+    regfile = open(rname,'w')
     regfile.write('image\n')
     
     for i in range(0,(stars.shape)[1]):

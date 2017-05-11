@@ -60,6 +60,7 @@ if not os.path.exists(date):
     os.makedirs(date+'/conf')
     os.makedirs(date+'/list')
     os.makedirs(date+'/reg')
+    os.makedirs(date+'/vars')
     
 #Define the "mean" FWHM for that night:
 fwhm_n = 10.**np.random.normal(loc=np.log10(1.55), scale=0.12, size=1)
