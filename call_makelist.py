@@ -54,6 +54,7 @@ def ccd_pointing(ra, dec, \
 #Date of obs and generate directory
 #for that date:
 date=datetime.strftime(datetime.now(), '%Y%m%d')
+date="20170803"
 if not os.path.exists(date):
     os.makedirs(date)
     os.makedirs(date+'/fits')
@@ -61,6 +62,7 @@ if not os.path.exists(date):
     os.makedirs(date+'/list')
     os.makedirs(date+'/reg')
     os.makedirs(date+'/var')
+    os.makedirs(date+'/radec')
     
 #Define the "mean" FWHM for that night:
 fwhm_n = 10.**np.random.normal(loc=np.log10(1.55), scale=0.12, size=1)
@@ -79,11 +81,14 @@ ysi=1.24*ypix/3600.
 xpsi = 2.*xsi-(10./60.)
 ypsi = 2.*ysi-(10./60.)
 
-xs = np.array([32,33,34,35,31,32,33,34,31,32,33,34,30,31,32,33])
-ys = np.array([3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6])
+#xs = np.array([32,33,34,35,31,32,33,34,31,32,33,34,30,31,32,33])
+#ys = np.array([3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6])
 
-#xs = np.array([32])
-#ys = np.array([3])
+#xs = np.array([32,33,31,32])
+#ys = np.array([3,3,4,4])
+
+xs = np.array([32,33])
+ys = np.array([3,3])
 
 i = 0
 for m in np.arange(xs.size):
@@ -106,14 +111,15 @@ for m in np.arange(xs.size):
     for j in np.arange(ccd_ras.size):
         ccd = "{0:02}".format(j+1)
         lname="GOTO_"+ccd+"_"+date+"_"+visit
-        makelist(ccd_ras[j], ccd_decs[j], ccd, date, lname, variability=True)
+        makelist(ccd_ras[j], ccd_decs[j], ccd, date, lname, variable=0.03, transients=50)
             
         #Three exposures per pointing:
     for h in np.arange(3):
         expo = "{0:02}".format(h+1)
         fwhm_p = 10.**np.random.normal(loc=np.log10(fwhm_n), scale=0.04)
         fwhm_p = np.clip(fwhm_p,0.8,10.)
-
+        fwhm_p = np.array(1.3)
+        
             #Loop over the CCDs:
         for j in np.arange(ccd_ras.size):
             ccd = "{0:02}".format(j+1)

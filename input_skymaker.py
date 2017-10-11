@@ -12,10 +12,13 @@ from astroquery.vizier import Vizier
 
 #import matplotlib.pyplot as plt
 
-def makelist(ra, dec, ccd, date, lname, variability=False):
+def makelist(ra, dec, ccd, date, lname, variable=0., transients=0.):
 
     vname = date+'/var/'+lname+'.var'
+    tname = date+'/var/'+lname+'.trans'
     rname = date+'/reg/'+lname+'.reg'
+    radec = date+'/radec/'+lname+'.txt'
+    
     
     #Define size of camera in pixels:
     xsi = 8176.
@@ -99,28 +102,56 @@ def makelist(ra, dec, ccd, date, lname, variability=False):
     
     stars[0,:] =  worlds[:,0]
     stars[1,:] =  worlds[:,1]
-
+    
     ind = [-1]
-    if variability:
-        #Select 0.5% of m<19 stars and add random variation:
-        varyfile = open(vname,'w')
+    if variable > 0:
+        #Select a set proportion of m<19 stars and add random variation:
         bright = np.squeeze(np.where((stars[2,:]<19) &\
                                       (stars[0,:]>0) & (stars[0,:]<xsi) &\
                                       (stars[1,:]>0) & (stars[1,:]<ysi)))
-        n_vary = int(np.round(0.005*(np.size(bright))))
+        n_vary = int(np.round(variable*(np.size(bright))))
         if n_vary > 0:
             ind = np.random.choice(bright, n_vary, replace=False)
             orig = stars[2,ind]
             stars[2,ind] = stars[2,ind] + np.random.normal(0, 1, ind.size)
-            for i in range(0,np.size(ind)):
-                varyfile.write(str(stars[0,ind[i]])+', '+str(stars[1,ind[i]])+', '+\
-                               str(orig[i])+', '+str(stars[2,ind[i]])+'\n')
             
+            np.savetxt(vname, np.c_[pixcrds[ind,0], pixcrds[ind,1], orig, stars[2,ind]], \
+                       header = 'RA Dec Orig_Mag New_Mag', \
+                       fmt='%9.5f %8.5f %5.2f %5.2f')
+
+    if transients > 0:
+        #Randomly distribute transients around image:
+        tx = np.random.uniform(0, xsi, transients)
+        ty = np.random.uniform(0, ysi, transients)
+        tm = np.random.uniform(14, 19, transients)
+
+        t = np.array([tx, ty, tm])
+        stars = np.append(stars, t, axis=1)
+        txy = (np.array([tx,ty])).transpose()
+        pixcrdt =  w.wcs_pix2world(txy, 1)
+
+        #Append transients to stars:
+        pixcrds = np.append(pixcrds,pixcrdt, axis=0)
+        
+        np.savetxt(tname, np.c_[pixcrdt[:,0], pixcrdt[:,1], tm], \
+                   header = 'RA Dec Orig_Mag New_Mag', \
+                   fmt='%9.5f %8.5f %5.2f')
+                    
     #Write stars to file:
     myfile = open('templist'+ccd+'.list','w')
     regfile = open(rname,'w')
     regfile.write('image\n')
+
+    obj = np.concatenate((100*np.ones(pixcrds[:,0].size), 200*np.ones(pixcrdg[:,0].size)))
+    ras = np.concatenate((pixcrds[:,0], pixcrdg[:,0]))
+    decs = np.concatenate((pixcrds[:,1], pixcrdg[:,1]))
+    mags = np.concatenate((stars[2,:], gals[2,:]))
     
+    np.savetxt(radec, \
+               np.c_[obj, ras, decs, mags], \
+               fmt='%3i %9.5f %8.5f %5.2f', \
+               header='Type RA DEC Mag')   
+
     for i in range(0,(stars.shape)[1]):
         myfile.write((str(100)+' '+str(stars[0,i])+' '+str(stars[1,i])+' '+str(stars[2,i]))+'\n')
         if np.any(ind == i):
@@ -128,7 +159,7 @@ def makelist(ra, dec, ccd, date, lname, variability=False):
         else:
             regfile.write('circle('+str(stars[0,i])+','+str(stars[1,i])+',3)\n')
             
-    #Write galss to file:
+    #Write gals to file:
     for i in range(0,(gals.shape)[1]):
         myfile.write((str(200)+' '+str(gals[0,i])+' '+str(gals[1,i])+' '+str(gals[2,i])+' ' +\
                       str(0)+' ' +str(0)+' ' +str(0)+' ' +str(0)+' ' + str(gals[3,i])+' '+\

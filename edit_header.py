@@ -50,7 +50,7 @@ def edit_header(date,ccd,visit,expo,\
     header['CD1_2'] = 0.
     header['CD2_2'] = 0.0003444444
     
-    header['PSF_FWHM'] = fwhm
+    header['PSF_FWHM'] = np.asscalar(fwhm)
     
     #Save file with new header information:
     fits.writeto(str(os.path.join(date,fname)), data, header, clobber=True)
