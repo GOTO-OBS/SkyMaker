@@ -113,7 +113,7 @@ for m in np.arange(ra.size):
        
     #Make a source list for each CCD:
     for j in np.arange(ccd_ras.size):
-        print ccd_ras, ccd_decs
+        print "CCD: ", j
         ccd = "{0:02}".format(j+1)
         lname="GOTO_"+ccd+"_"+date+"_"+visit
         makelist(ccd_ras[j], ccd_decs[j], ccd, date, lname, variable=0.03, transients=50)
