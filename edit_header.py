@@ -1,4 +1,3 @@
-import pyfits
 import os
 from datetime import datetime
 from astropy.io.fits import getheader
@@ -53,4 +52,4 @@ def edit_header(date,ccd,visit,expo,\
     header['PSF_FWHM'] = np.asscalar(fwhm)
     
     #Save file with new header information:
-    fits.writeto(str(os.path.join(date,fname)), data, header, clobber=True)
+    fits.writeto(str(os.path.join(date,fname)), data, header, overwrite=True)

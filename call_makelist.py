@@ -95,53 +95,52 @@ for m in np.arange(xs.size):
     i = i+1
     visit = "{0:04}".format(i)
         
-        #Get (RA,Dec) of mount pointing:
-        #Overlap between pointings is 15':
+    #Get (RA,Dec) of mount pointing:
+    #Overlap between pointings is 15':
     mount_ra, mount_dec = mount_pointing(xs[m], ys[m],\
                                          width=xpsi, height=ypsi,\
                                          w_olap=15./60., h_olap=15./60.)
                                              
-        #Get (RA,Dec) of CCDs:
-        #Overlap between CCDs is 10':
+    #Get (RA,Dec) of CCDs:
+    #Overlap between CCDs is 10':
     ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec,\
                                      width=xsi, height=ysi,\
                                      w_olap=10./60., h_olap=10./60.)
         
-        #Make a source list for each CCD:
+    #Make a source list for each CCD:
     for j in np.arange(ccd_ras.size):
         ccd = "{0:02}".format(j+1)
         lname="GOTO_"+ccd+"_"+date+"_"+visit
         makelist(ccd_ras[j], ccd_decs[j], ccd, date, lname, variable=0.03, transients=50)
             
-        #Three exposures per pointing:
+    #Three exposures per pointing:
     for h in np.arange(3):
         expo = "{0:02}".format(h+1)
         fwhm_p = 10.**np.random.normal(loc=np.log10(fwhm_n), scale=0.04)
         fwhm_p = np.clip(fwhm_p,0.8,10.)
         fwhm_p = np.array(1.3)
         
-            #Loop over the CCDs:
+        #Loop over the CCDs:
         for j in np.arange(ccd_ras.size):
             ccd = "{0:02}".format(j+1)
             fname = "GOTO_"+ccd+"_"+date+"_"+visit+"_"+expo
 
-                #Write the necessary data into the .conf file: 
+            #Write the necessary data into the .conf file: 
             with open('goto.conf') as infile, \
                     open(date+"/conf/"+fname+'.conf', 'w') as outfile:
                 for line in infile:
-                        #Filename of output:
+                    #Filename of output:
                     line = line.replace('goto.fits', \
                                                 date+"/fits/"+fname+'.fits')
-                        #Seeing FWHM:    
+                    #Seeing FWHM:    
                     line = line.replace('2.96065834', str(fwhm_p))
                     outfile.write(line)
 
-                #Run SkyMaker with generated list and .conf:
+            #Run SkyMaker with generated list and .conf:
             os.system('sky templist'+ccd+'.list -c '+ date+"/conf/"+fname+'.conf')   
             os.rename(date+'/fits/'+fname+'.list',date+'/list/'+fname+'.list')
                 
-                #Edit header of output .fits file:
-                #Here, the "1." is just a placeholder for the FWHM.
+            #Edit header of output .fits file:
             edit_header(date,ccd,visit,expo,\
                         ccd_ras[j],ccd_decs[j],\
                         mount_ra, mount_dec,\
