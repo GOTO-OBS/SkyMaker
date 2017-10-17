@@ -1,10 +1,12 @@
 import numpy as np
 from astropy import wcs
 import os
+import re
 from datetime import datetime
 from input_skymaker import makelist
 from edit_header import edit_header
-#import matplotlib.pyplot as plt
+import glob
+import matplotlib.pyplot as plt
 
 def mount_pointing(x, y, \
                    width=4., height=4., \
@@ -81,34 +83,37 @@ ysi=1.24*ypix/3600.
 xpsi = 2.*xsi-(10./60.)
 ypsi = 2.*ysi-(10./60.)
 
-#xs = np.array([32,33,34,35,31,32,33,34,31,32,33,34,30,31,32,33])
-#ys = np.array([3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6])
 
-#xs = np.array([32,33,31,32])
-#ys = np.array([3,3,4,4])
-
-xs = np.array([32,33])
-ys = np.array([3,3])
+#Read in the positions:
+ra = np.array([])
+dec = np.array([])
+files = glob.glob('pointings/15420.txt')
+for filen in files:
+    with open(filen,'r') as fin:
+        for line in fin:
+            if 'OBS' in line:
+                m = re.search('ra: (.+?);', line)
+                ra = np.append(ra, float(m.group(1)))
+                m = re.search('dec: (.+?);', line)
+                dec = np.append(dec, float(m.group(1)))
 
 i = 0
-for m in np.arange(xs.size):
+for m in np.arange(ra.size):
     i = i+1
     visit = "{0:04}".format(i)
         
     #Get (RA,Dec) of mount pointing:
-    #Overlap between pointings is 15':
-    mount_ra, mount_dec = mount_pointing(xs[m], ys[m],\
-                                         width=xpsi, height=ypsi,\
-                                         w_olap=15./60., h_olap=15./60.)
+    mount_ra, mount_dec = ra[m], dec[m]
                                              
     #Get (RA,Dec) of CCDs:
     #Overlap between CCDs is 10':
     ccd_ras, ccd_decs = ccd_pointing(mount_ra, mount_dec,\
                                      width=xsi, height=ysi,\
                                      w_olap=10./60., h_olap=10./60.)
-        
+       
     #Make a source list for each CCD:
     for j in np.arange(ccd_ras.size):
+        print ccd_ras, ccd_decs
         ccd = "{0:02}".format(j+1)
         lname="GOTO_"+ccd+"_"+date+"_"+visit
         makelist(ccd_ras[j], ccd_decs[j], ccd, date, lname, variable=0.03, transients=50)
