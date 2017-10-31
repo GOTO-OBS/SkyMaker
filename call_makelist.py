@@ -1,5 +1,6 @@
 import numpy as np
 from astropy import wcs
+from astropy.io import fits
 import os
 import re
 from datetime import datetime
@@ -7,6 +8,7 @@ from input_skymaker import makelist
 from edit_header import edit_header
 import glob
 import matplotlib.pyplot as plt
+from astropy.modeling import models, fitting
 
 def mount_pointing(x, y, \
                    width=4., height=4., \
@@ -97,6 +99,39 @@ for filen in files:
                 m = re.search('dec: (.+?);', line)
                 dec = np.append(dec, float(m.group(1)))
 
+ra = np.array(ra[0:1])
+dec = np.array(dec[0:1])
+
+#Read in the calibration files:
+flat = np.array([fits.getdata('calibs/flat/UT1_FLAT_2017-07-26.fits', 1),\
+                 fits.getdata('calibs/flat/UT2_FLAT_2017-07-26.fits', 1),\
+                 fits.getdata('calibs/flat/UT2_FLAT_2017-07-26.fits', 1),\
+                 fits.getdata('calibs/flat/UT4_FLAT_2017-07-26.fits', 1)])
+bias = np.array([fits.getdata('calibs/bias/UT1_BIAS_2017-07-26.fits', 1),\
+                 fits.getdata('calibs/bias/UT2_BIAS_2017-07-26.fits', 1),\
+                 fits.getdata('calibs/bias/UT2_BIAS_2017-07-26.fits', 1),\
+                 fits.getdata('calibs/bias/UT4_BIAS_2017-07-26.fits', 1)])
+dark = np.array([fits.getdata('calibs/dark/UT1_DARK_2017-07-26.fits', 1),\
+                 fits.getdata('calibs/dark/UT2_DARK_2017-07-26.fits', 1),\
+                 fits.getdata('calibs/dark/UT2_DARK_2017-07-26.fits', 1),\
+                 fits.getdata('calibs/dark/UT4_DARK_2017-07-26.fits', 1)])
+scan = np.array([fits.getdata('calibs/scan/BIAS-UT1-r0002212.fts', 0),\
+                 fits.getdata('calibs/scan/BIAS-UT2-r0002212.fts', 0),\
+                 fits.getdata('calibs/scan/BIAS-UT2-r0002212.fts', 0),\
+                 fits.getdata('calibs/scan/BIAS-UT4-r0002212.fts', 0)])
+
+y = np.mean(scan[1,1:,0:14],axis=1)
+x = np.arange(y.size)+1
+poly = models.Polynomial1D(degree=4)
+fitfun = fitting.LevMarLSQFitter()
+fit = fitfun(poly, x, y)
+#Fit with a 4th order polynomial:
+
+plt.plot(x, y)
+plt.plot(fit(x))
+plt.show()
+quit()
+
 i = 0
 for m in np.arange(ra.size):
     i = i+1
@@ -144,9 +179,30 @@ for m in np.arange(ra.size):
             #Run SkyMaker with generated list and .conf:
             os.system('sky templist'+ccd+'.list -c '+ date+"/conf/"+fname+'.conf')   
             os.rename(date+'/fits/'+fname+'.list',date+'/list/'+fname+'.list')
-                
+
+            #Multiply through by appropriate flat:
+            sci, head = fits.getdata(date+'/fits/'+fname+'.fits', header=True)
+            sci = sci * flat[j]
+
+            #Add the appropriate dark:
+            sci = sci + dark[j]
+
+            #Add the appropriate bias:
+            sci = sci + bias[j]
+
+            #Add the overscan:
+
+
+            #Clip to saturation point
+            sci = np.clip(sci,0,65000)
+
+            #Write to file:
+            fits.writeto(date+'/fits/'+fname+'.fits', sci, head, overwrite=True)
+
             #Edit header of output .fits file:
             edit_header(date,ccd,visit,expo,\
                         ccd_ras[j],ccd_decs[j],\
                         mount_ra, mount_dec,\
                         fwhm_p)
+
+            
